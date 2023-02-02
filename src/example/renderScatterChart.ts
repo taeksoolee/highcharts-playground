@@ -1,0 +1,145 @@
+/**
+ * Scatter Point Chart
+ */
+
+import Highcharts from 'highcharts';
+
+interface Data {
+  // continent: "Asia",
+  // country: "AFG",
+  // height: 1.75, // 키
+  // weight: 68, // 몸무게
+  // BMI: 22.2,
+  // age: 24.2,
+  // gender: "male",
+  // sport: "athletics"
+  continent: string,
+  country: string,
+  height: number, // 키
+  weight: number, // 몸무게
+  BMI: number,
+  age: number,
+  gender: "male" | "female",
+  sport: string,
+}
+
+Highcharts.setOptions({
+  colors: ['rgba(5,141,199,0.5)', 'rgba(80,180,50,0.5)', 'rgba(237,86,27,0.5)']
+});
+
+const series: Partial<Highcharts.SeriesOptionsType>[] = [{
+  name: 'Basketball',
+  id: 'basketball',
+  marker: {
+    symbol: 'circle',
+    radius: 10
+  }
+  ,
+},
+{
+  name: 'Triathlon',
+  id: 'triathlon',
+  marker: {
+    symbol: 'triangle',
+    radius: 10
+  }
+},
+{
+  name: 'Volleyball',
+  id: 'volleyball',
+  marker: {
+    symbol: 'square',
+    radius: 15
+  }
+}];
+
+
+async function getData(): Promise<Data[]> {
+  const response = await fetch(
+    'https://cdn.jsdelivr.net/gh/highcharts/highcharts@24912efc85/samples/data/olympic2012.json'
+  );
+  return response.json();
+}
+
+
+async function renderScatterChart() {
+  const data = await getData();
+
+  series.forEach(s => {
+    const sportName = s.id;
+    const temp: Highcharts.PointOptionsObject[] = [];
+    data.forEach(elm => {
+      if (elm.sport === sportName && elm.weight > 0 && elm.height > 0) {
+        temp.push([elm.height, elm.weight]);
+      }
+    });
+
+    (s as any).data = temp;
+  });
+
+
+  Highcharts.chart('scatter-chart', {
+    chart: {
+      type: 'scatter',
+      zoomType: 'xy',
+    },
+    title: {
+      text: 'Olympics athletes by height and weight',
+      align: 'left',
+    },
+    subtitle: {
+      text:
+        'Source: <a href="https://www.theguardian.com/sport/datablog/2012/aug/07/olympics-2012-athletes-age-weight-height">The Guardian</a>',
+      align: 'left'
+    },
+    xAxis: {
+      title: {
+        text: 'Height',
+      },
+      labels: {
+        format: '{value} m'
+      },
+      startOnTick: true,
+      endOnTick: true,
+      showLastLabel: true
+    },
+    yAxis: {
+      title: {
+        text: 'Weight',
+      },
+      label: {
+        format: '{value} kg'
+      }
+    },
+    legend: {
+      enabled: true
+    },
+    plotOptions: {
+      scatter: {
+        marker: {
+          radius: 10,
+          symbol: 'circle',
+          states: {
+            hover: {
+              enabled: true,
+              lineColor: 'rgb(100,100,100)'
+            }
+          }
+        },
+        states: {
+          hover: {
+            marker: {
+              enabled: false,
+            }
+          }
+        }
+      },
+    },
+    tooltip: {
+      pointFormat: 'Height: {point.x} m <br/> Weight: {point.y} kg'
+    },
+    series
+  } as Highcharts.Options);
+}
+
+export default renderScatterChart;
